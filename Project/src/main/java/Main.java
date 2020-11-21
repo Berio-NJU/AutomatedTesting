@@ -97,6 +97,7 @@ public class Main {
                     Iterator<CGNode> cgNodeIterator = cg.getPredNodes(node);
                     while (cgNodeIterator.hasNext()) {
                         CGNode predNode = cgNodeIterator.next();
+                        // 筛选所需的节点
                         if (!(predNode.getMethod() instanceof ShrikeBTMethod)) {
                             continue;
                         }
@@ -116,11 +117,15 @@ public class Main {
                             myPredNode = myCallGraph.getCGNode(predClassInnerName, predSignature);
                         }
 
+                        // 在myCallGraph里连接两节点
                         connect(myCallGraph, myPredNode, myThisNode);
 
 
+                        // 输出到方法级别的dot文件
                         String oneEdgeInDot = "\t" + "\"" + signature + "\"" + " -> " + "\"" + predSignature + "\"" + ";\n";
                         methodDotWriter.append(oneEdgeInDot);
+
+                        // 类级别dot文件
                         String predNodesClassInnerName = predNode.getMethod().getDeclaringClass().getName().toString();
                         Pair<String, String> classEdge = new Pair<String, String>(classInnerName, predNodesClassInnerName);
                         if (!classEdgesList.contains(classEdge)) {
@@ -133,6 +138,7 @@ public class Main {
             }
         }
 
+        // 输出到类级别dot文件
         for (Pair<String, String> stringStringPair : classEdgesList) {
             String leftClass = stringStringPair.getKey();
             String rightClass = stringStringPair.getValue();
@@ -177,6 +183,7 @@ public class Main {
         // 方法粒度
         for (MyCGNode testNode : testNodes) {
             for (MyCGNode ciNode : CINodes) {
+                // myCallGraph里有test节点和ChangeInfo节点的单向连线，则选择该test节点
                 if (myCallGraph.containsMethodEdge(testNode, ciNode)) {
                     selectedMethodTestNodes.add(testNode);
                     break;
@@ -185,8 +192,10 @@ public class Main {
         }
 
         // 类粒度
+        // 获取受改变的类的名称（其中包含测试类）
         ArrayList<String> changeClassesNameList = myCallGraph.getChangeClassesName(CINodes);
 
+        // 挑选包含在测试类中的测试方法
         for (MyCGNode testNode : testNodes) {
             if (changeClassesNameList.contains(testNode.getClassStr())) {
                 selectedClassTestNodes.add(testNode);
@@ -218,6 +227,7 @@ public class Main {
         succNode.addPredNode(predNode);
     }
 
+    // 写出selection-class/method.txt
     static void outputSelectedText(ArrayList<MyCGNode> selectedNodes, File outputFile) throws IOException {
         createFile(outputFile);
         FileOutputStream fop = new FileOutputStream(outputFile);
